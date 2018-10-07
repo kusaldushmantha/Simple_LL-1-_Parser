@@ -9,16 +9,34 @@ finalAcceptedString = ""
 def parserTable():
   print("[Init] Creating parser table ...")
   parserDict = dict()
-  parserDict[("E","(")] = "(F)"
-  parserDict[("E", "0")] = "T"
-  parserDict[("E", "1")] = "T"
-  parserDict[("E", "2")] = "T"
-  parserDict[("E", "3")] = "T"
-  parserDict[("F", "+")] = "+EE"
-  parserDict[("T", "0")] = "0"
-  parserDict[("T", "1")] = "1"
-  parserDict[("T", "2")] = "2"
-  parserDict[("T", "3")] = "3"
+  print("[Read] Reading production rules ...")
+  with open("parse_table.txt") as f_in:
+    lines = list(line for line in (l.strip() for l in f_in) if line)
+    for l in lines:
+      l = l.split()
+      nonterminal = l[0]
+      stringer = ""
+      setContinue = False
+      printCounter = 0
+      for i in [i for i in l[1]]:
+        if(setContinue or printCounter>0):
+          setContinue = False
+          printCounter -=1
+          continue
+        if(i != "["):
+          if(i != "]"):
+            if(i != ","):
+              if(i == "i"):
+                stringer+="if"+","
+                setContinue = True
+              elif(i == "p"):
+                stringer += "print"+","
+                printCounter = 4
+              else:
+                stringer+=str(i)+","
+      stringer = stringer[:len(stringer)-1].split(",")
+      for i in stringer:
+        parserDict[(nonterminal, i)] = l[2]
   return parserDict
 
 def readFile(filename):
@@ -44,9 +62,21 @@ def getValuesForNonTerminal(parserDict, headOfStack):
   return expectedList
 
 def parseString(currentInput, stack):
-  headCurrentInput = currentInput[0]
-  headOfStack = stack[0]
+  if(currentInput[0]=="i"):
+    headCurrentInput = currentInput[:2]
+  elif(currentInput[0]=="p"):
+    headCurrentInput = currentInput[:5]
+  else:
+    headCurrentInput = currentInput[0]
+  if(stack[0]=="i"):
+    headOfStack = stack[:2]
+  elif(stack[0]=="p"):
+    headOfStack = stack[:5]
+  else:  
+    headOfStack = stack[0]
   try:
+    if(headOfStack == "^"):
+      return currentInput, stack[1:]
     replaceString = parserDict[(headOfStack, headCurrentInput)]
     stack = replaceString + stack[1:]
     return currentInput, stack
@@ -117,10 +147,12 @@ def parseString(currentInput, stack):
 
 stringToParse = readFile(input("Filename : "))
 if(stringToParse):
+  print("[Info] EPSILON will be denoted by '^' symbol....")
   parserDict = parserTable()
   currentInput = stringToParse + "$"
-  stack = "E$"
+  stack = "L$"
   reject = 0
+  non_terminals = ["(",")","i","+","-","*","1","2","3","0","a","b","c","d","p"]
   print(currentInput + "                        "+stack)
   while(currentInput != "$" or stack != "$"):
     currentInput, stack= parseString(currentInput, stack)
@@ -129,7 +161,17 @@ if(stringToParse):
       while(currentInput[0] == stack[0]):
         if(currentInput[0] == "$" or stack[0] == "$"):
           break
-        if(currentInput[0] == stack[0]):
+        if(currentInput[0:2]=="if" and currentInput[0:2] == stack[0:2]):
+          finalAcceptedString += currentInput[0:2]
+          currentInput = currentInput[2:]
+          stack = stack[2:]
+          print(currentInput + "                        "+stack)          
+        elif(currentInput[0:5]=="print" and currentInput[0:5] == stack[0:5]):
+          finalAcceptedString += currentInput[0:5]
+          currentInput = currentInput[5:]
+          stack = stack[5:]
+          print(currentInput + "                        "+stack)          
+        elif(currentInput[0] == stack[0]):
           finalAcceptedString += currentInput[0]
           currentInput = currentInput[1:]
           stack = stack[1:]
