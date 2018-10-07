@@ -4,6 +4,8 @@
 Created on Sat Oct  6 20:45:07 2018
 
 """
+finalAcceptedString = ""
+
 def parserTable():
   print("[Init] Creating parser table ...")
   parserDict = dict()
@@ -33,6 +35,14 @@ def readFile(filename):
     print("[Error] Error while reading input string file ...")
     return None
 
+def getValuesForNonTerminal(parserDict, headOfStack):
+  expectedList = []
+  keys = list(parserDict.keys())
+  for i in keys:
+    if(i[0]==headOfStack):
+      expectedList.append(i[1])
+  return expectedList
+
 def parseString(currentInput, stack):
   headCurrentInput = currentInput[0]
   headOfStack = stack[0]
@@ -41,8 +51,69 @@ def parseString(currentInput, stack):
     stack = replaceString + stack[1:]
     return currentInput, stack
   except:
-    print("[Output] Rejected")
-    return None, None
+    if(headOfStack == "$" and len(currentInput)==2):
+      if(currentInput[1]=="$"):
+        print("[Error] Got " + headCurrentInput+", but expected {$}")
+        userInput = input("Delete input? Y or N : ")
+        if(userInput == "Y"):
+          currentInput = currentInput[1:]
+          return currentInput, stack
+        else:
+          print("[Info] Invalid user input..")
+          print("[Output] Rejected")
+          return None, None
+    elif(headCurrentInput == "$" and len(stack)==2):
+      if(stack[1]=="$"):
+        print("[Error] Got " + headCurrentInput+", but expected {"+headOfStack+"}")
+        userInput = input("Add input? ")
+        if(userInput == headOfStack):
+          currentInput = userInput+headCurrentInput
+          return currentInput, stack
+        else:
+          print("[Info] Invalid user input..")
+          print("[Output] Rejected")
+          return None, None
+    else:
+        expectedList = getValuesForNonTerminal(parserDict, headOfStack)
+        if(expectedList):
+          expectedListString = ""
+          for item in expectedList:
+            expectedListString+=item + ", "
+          expectedListString = expectedListString.strip()
+          if(expectedListString[len(expectedListString)-1]==","):
+            expectedListString = expectedListString[:len(expectedListString)-1]
+          print("[Error] Got " + headCurrentInput+", but expected {" + expectedListString+" }")
+          userInput = input("Add input? ")
+          if(userInput in expectedList):
+            if(currentInput == "$"):
+              currentInput = userInput+currentInput
+            else:
+              currentInput = userInput+currentInput[1:]
+            return currentInput, stack
+          else:
+            print("[Info] Invalid user input..")
+            print("[Output] Rejected")
+            return None, None
+        else:
+          print("[Error] Got " + headCurrentInput+", but expected {" + headOfStack+"}")
+          if(currentInput == "$"):
+            userInput = input("Add input? ")
+            if(userInput == headOfStack):
+              currentInput = userInput+currentInput
+              return currentInput, stack
+            else:
+              print("[Info] Invalid user input..")
+              print("[Output] Rejected")
+              return None, None
+          else:
+            userInput = input("Delete input? Y or N : ")
+            if(userInput == "Y"):
+              currentInput = currentInput[1:]
+              return currentInput, stack
+            else:
+              print("[Info] Invalid user input..")
+              print("[Output] Rejected")
+              return None, None
 
 stringToParse = readFile(input("Filename : "))
 if(stringToParse):
@@ -50,14 +121,16 @@ if(stringToParse):
   currentInput = stringToParse + "$"
   stack = "E$"
   reject = 0
-  while(currentInput != "$" and stack != "$"):
-    currentInput, stack = parseString(currentInput, stack)
+  print(currentInput + "                        "+stack)
+  while(currentInput != "$" or stack != "$"):
+    currentInput, stack= parseString(currentInput, stack)
     if(currentInput != None and stack != None):
       print(currentInput + "                        "+stack)
       while(currentInput[0] == stack[0]):
         if(currentInput[0] == "$" or stack[0] == "$"):
           break
         if(currentInput[0] == stack[0]):
+          finalAcceptedString += currentInput[0]
           currentInput = currentInput[1:]
           stack = stack[1:]
           print(currentInput + "                        "+stack)
@@ -65,7 +138,7 @@ if(stringToParse):
       reject = 1
       break
   if(reject == 0):
-    print("[Output] Accepted")    
+    print("[Output] Accepted : " + finalAcceptedString)    
 
 
   
