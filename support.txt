@@ -1,0 +1,30 @@
+----------------------------------EXAMPLES-----------------------------------------
+
+1. (if(-1a)(print1)) - This input will be accepted by the parser
+
+2. (if(-1a)(print - Suppose this is your input
+This will not get parsed by the parser, On running the script on ERROR mode, 
+this will be printed in terminal
+
+$                        L)D)M$
+[Error] Got $, but expected {(, 0, 1, 2, 3, a, b, c, d }
+Add input?
+
+That means our input is empty while our stack is not empty. Look for the First
+set of L in question 4 table. L is currently head of stack. To pop L from head of the
+stack we need to have atleast one input from First set of L in our input.
+That is why program asks to add one of the inputs from {(, 0, 1, 2, 3, a, b, c, d }
+i.e. First set of L
+
+3. (ifM)
+In this example, again parser wont pass this, terminal output is as follows,
+M)$                        EED)M$
+[Error] Got M, but expected {(, 0, 1, 2, 3, a, b, c, d }
+Add input? 
+
+Head of stack is E and current input is M. To pop head of stack check for 
+First set of E, we need of these inputs to pop of head of stack. That is why 
+program suggests expected inputs (, 0, 1, 2, 3, a, b, c, d 
+
+You can create more examples for the grammer, just create a parse tree and
+identify random input strings that does not get parsed.
